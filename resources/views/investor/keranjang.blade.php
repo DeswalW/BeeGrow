@@ -39,4 +39,5 @@
             <p class="text-gray-700">Keranjang Anda kosong.</p>
         @endif
     </div>
+    
 </x-app-layout>
