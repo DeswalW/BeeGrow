@@ -280,7 +280,7 @@
                         toastr.error('Jumlah lembar harus lebih dari 0!', 'Error');
                         return;
                     }
-                    window.location.href = "{{ route('investor.payment.show', ['projectId' => $project->id]) }}";
+                    window.location.href = `{{ route('investor.payment.show', ['projectId' => $project->id]) }}?quantity=${quantity}`;
                 }
             </script>
 </x-app-layout>

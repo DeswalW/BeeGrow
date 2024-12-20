@@ -8,5 +8,7 @@ $classes = ($active ?? false)
 
 <a {{ $attributes->merge(['class' => $classes]) }}>
     {!! $icon !!}
-    {{ $slot }}
+    <div class="hidden md:block">
+        {{ $slot }}
+    </div>
 </a>

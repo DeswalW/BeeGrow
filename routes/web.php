@@ -42,8 +42,6 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-Route::post('payment/notification', [PaymentController::class, 'notification'])
-    ->name('payment.notification')
-    ->withoutMiddleware([VerifyCsrfToken::class]);
+Route::post('/payment/notification', [PaymentController::class, 'notification']);
 
 require __DIR__.'/auth.php';

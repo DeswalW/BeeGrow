@@ -16,8 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            'cors' => \Illuminate\Http\Middleware\HandleCors::class, // Tambahkan alias untuk CORS
         ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'notification',
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

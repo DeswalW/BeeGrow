@@ -1,7 +1,7 @@
 @props(['provinces'])
 
 <aside
-    class="absolute drawer top-0 left-0 z-40 pl-20 pr-6 w-80 h-screen pt-24 transition-transform bg-gray-50 -translate-x-full md:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
+    class="absolute drawer top-0 left-0 z-40 px-6 md:pl-10 lg:pl-20 py-24 w-60 md:w-80 h-full transition-transform overflow-auto no-scrollbar bg-gray-50 -translate-x-full md:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
     aria-label="Sidenav"
     id="filter"
 >

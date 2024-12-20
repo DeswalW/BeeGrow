@@ -1,4 +1,4 @@
-<nav class="bg-white border-b border-gray-200 px-20 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
+<nav class="bg-white border-b border-gray-200 px-6 md:px-10 lg:px-20 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
     <div class="flex flex-wrap justify-between items-center">
       <div class="flex justify-start items-center">
         <!-- Button Toggle Sidebar -->
@@ -38,10 +38,10 @@
         </button>
 
         <!-- Logo Aplicación -->
-        <x-application-logo />
+        <x-application-logo class="hidden md:block"/>
       </div>
 
-      <div class="flex items-center lg:order-2 gap-6">
+      <div class="flex items-center lg:order-2 gap-1 md:gap-6">
         <!-- Explore -->
         <x-nav-link :icon="html_entity_decode('<i class=\'fa-solid fa-store\'></i>')" :href="route('dashboard')"  :active="request()->routeIs('dashboard', 'home')" class="flex items-center gap-2">
             <span class="hidden md:block">
@@ -93,15 +93,17 @@
           aria-expanded="false"
           data-dropdown-toggle="dropdown"
         >
-            <div class="flex items-center gap-4 pr-1">
+            <div class="flex items-center gap-4">
                 <img
                   class="w-8 h-8 rounded-full"
                   src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/michael-gough.png"
                   alt="user photo"
                 />
+                <div class="hidden md:block">
+                  <span class="text-gray-500 dark:text-gray-400">{{ Auth::user()->name }}</span>
+                  <i class="fa-solid fa-chevron-down"></i>
+                </div>
                 <span class="sr-only">Open user menu</span>
-                <span class="text-gray-500 dark:text-gray-400">{{ Auth::user()->name }}</span>
-                <i class="fa-solid fa-chevron-down"></i>
             </div>
         </button>
         <!-- Dropdown menu -->
