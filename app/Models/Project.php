@@ -38,9 +38,10 @@ class Project extends Model
         return $this->hasOne(Share::class);
     }
 
-    public function investors()
+    // Tambahkan relasi dengan Investment
+    public function investments()
     {
-        return $this->hasOne(Investor::class);
+        return $this->hasMany(Investment::class);
     }
 
     // Accessor untuk data keranjang
@@ -53,4 +54,23 @@ class Project extends Model
             'total_amount' => 0
         ];
     }
+
+    public function getRemainingFundingAttribute()
+    {
+        $target = $this->fundingDetails->target_pendanaan;
+        $collected = $this->fundingDetails->dana_terkumpul;
+        return max(0, $target - $collected);
+    }
+
+    public function getMaxRemainingSharesAttribute()
+    {
+        return floor($this->remaining_funding / 10000);
+    }
+
+    public function isFullyFunded()
+    {
+        return $this->fundingDetails->dana_terkumpul >= $this->fundingDetails->target_pendanaan;
+    }
+
+
 }

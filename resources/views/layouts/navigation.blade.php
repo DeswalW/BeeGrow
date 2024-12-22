@@ -62,7 +62,7 @@
               {{ __('Keranjang') }}
           </span>
           <div id="cart-icon" class="relative">
-              <span id="cart-count" class="absolute -top-4 -right-3 bg-ungu outline outline-offset-0 outline-4 outline-[#E6E2FF] text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+              <span id="cart-count" class="absolute -top-6 -right-5 bg-ungu outline outline-offset-0 outline-4 outline-[#E6E2FF] text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {{ count(session()->get('keranjang', [])) }}
               </span>
           </div>

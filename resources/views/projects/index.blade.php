@@ -59,7 +59,6 @@
                             </p>
                         </div>
                     </div>
-
                     <div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
                         <div class="bg-ungu h-1.5 rounded-full" style="width: {{ min(100, ($project->fundingDetails->dana_terkumpul / $project->fundingDetails->target_pendanaan) * 100) }}%"></div>
                     </div>
@@ -83,7 +82,7 @@
                             <div 
                                 class="grow shrink basis-0 h-[53px] p-4 border-b-2 cursor-pointer 
                                 {{ $loop->first ? 'border-[#6a57c8] text-[#6a57c8] font-semibold' : 'border-neutral-200 text-[#252733]' }} 
-                                text-sm font-['Poppins'] justify-center items-center gap-2.5 flex"
+                                text-sm justify-center items-center gap-2.5 flex"
                                 @click="activeTab = '{{ $menu['key'] }}'"
                                 :class="{ 'border-[#6a57c8] text-[#6a57c8] font-semibold': activeTab === '{{ $menu['key'] }}', 'border-neutral-200 text-[#252733] font-normal': activeTab !== '{{ $menu['key'] }}' }"
                             >
@@ -154,7 +153,13 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="self-stretch text-center text-gray-500 text-xs font-normal">Maksimal Rp160.000.000</div>
+                            <div class="self-stretch text-center text-gray-500 text-xs font-normal">
+                                @if($project->isFullyFunded())
+                                    <span class="text-green-500">Pendanaan telah terpenuhi</span>
+                                @else
+                                    Maksimal {{ number_format($project->max_remaining_shares) }} lembar (Rp{{ number_format($project->remaining_funding) }})
+                                @endif
+                            </div>
                             <div class="self-stretch h-[87px] flex-col justify-start items-start gap-4 flex">
                                 <div class="self-stretch justify-start items-center gap-2 inline-flex">
                                     <div class="text-gray-900 text-md font-semibold">Ekspektasi hasil</div>
@@ -222,6 +227,13 @@
 
                 function updateTotalValue() {
                     const input = document.getElementById('investmentAmount');
+                    const maxShares = {{ $project->max_remaining_shares }};
+                    
+                    // Batasi input maksimal
+                    if (parseInt(input.value) > maxShares) {
+                        input.value = maxShares;
+                    }
+                    
                     const totalValue = parseInt(input.value) * 10000 || 0;
                     document.getElementById('totalInvestment').innerText = `Rp${totalValue.toLocaleString()}`;
                     calculateInvestment(totalValue);

@@ -10,6 +10,7 @@ class FundingDetail extends Model
         'project_id',
         'target_pendanaan',
         'dana_terkumpul',
+        'admin_fee_collected',
     ];
 
     public function project()

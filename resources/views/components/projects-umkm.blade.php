@@ -13,7 +13,8 @@
                             <img class="object-cover mx-auto h-32 w-full dark:hidden" src="{{ asset('img/umkm1.jpeg') }}" alt="{{ $project->title }}" />
                             <img class="object-cover mx-auto hidden h-32 w-full dark:block" src="{{ asset('img/umkm1.jpeg') }}" alt="{{ $project->title }}" />
                         </a>
-                        <span class="absolute top-2 right-3 px-2 py-1 text-xs text-white dark:bg-primary-900 dark:text-primary-300 bg-ungu bg-opacity-50 backdrop-blur-[2px] rounded-full">
+                        <span class="absolute top-2 right-3 px-2 py-1 text-xs text-white dark:text-primary-300 backdrop-blur-[2px] rounded-full
+                        {{ $project->status === 'Sedang Berlangsung' ? 'bg-ungu bg-opacity-50' : 'bg-kuning bg-opacity-50' }}">
                             {{ $project->status }}
                         </span>
                     </div>
@@ -44,7 +45,7 @@
                         <div class="flex justify-between items-center">
                             <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
                                 <i class="fa-regular fa-clock"></i>
-                                {{ $project->deadline->diffForHumans() }}
+                                {{ $project->deadline->diffForHumans(null, true, false, 1) . ' lagi'}}
                             </p>
         
                             <div class="flex items-center justify-between text-ungu">

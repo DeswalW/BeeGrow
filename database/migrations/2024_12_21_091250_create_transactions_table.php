@@ -15,8 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
-            $table->string('order_id')->unique();
+            $table->uuid('order_id')->unique();
             $table->decimal('amount', 15, 2);
+            $table->integer('quantity');
+            $table->string('payment_type')->nullable();
+            $table->string('payment_code')->nullable();
+            $table->timestamp('payment_date')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
         });

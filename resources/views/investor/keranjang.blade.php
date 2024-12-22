@@ -1,43 +1,105 @@
 <x-app-layout>
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-2xl font-bold mb-4">Keranjang Anda</h1>
-
-        @if(session('success'))
+    <div class="container mx-auto px-4 py-4 pt-24">
+        <h1 class="text-xl font-semibold mb-4">Keranjang Belanja</h1>
+         @if(session('success'))
             <div class="bg-green-500 text-white p-4 rounded mb-4">
                 {{ session('success') }}
             </div>
         @endif
-
-        @if(count($keranjang) > 0)
-            <table class="w-full bg-white rounded-lg shadow-md">
-                <thead>
-                    <tr>
-                        <th class="py-2 px-4 border-b">Proyek</th>
-                        <th class="py-2 px-4 border-b">Jumlah Lembar</th>
-                        <th class="py-2 px-4 border-b">Total Bayar</th>
-                        <th class="py-2 px-4 border-b">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($keranjang as $projectId => $item)
-                        <tr>
-                            <td class="py-2 px-4 border-b">{{ $item['project_name'] ?? 'Proyek tidak ditemukan' }}</td>
-                            <td class="py-2 px-4 border-b">{{ $item['quantity'] }}</td>
-                            <td class="py-2 px-4 border-b">Rp{{ number_format($item['total_amount']) }}</td>
-                            <td class="py-2 px-4 border-b">
+         <!-- Header Tabel -->
+        <div class="flex flex-col space-y-4">
+            <div class="hidden md:grid grid-cols-12 p-4 text-gray-600 bg-white rounded-2xl">
+                <div class="col-span-4">Produk</div>
+                <div class="col-span-2 text-center">Satu Lembar</div>
+                <div class="col-span-2 text-center">Jumlah Lembar</div>
+                <div class="col-span-2 text-center">Total Investasi</div>
+                <div class="col-span-2 text-center">Aksi</div>
+            </div>
+             @if(count($keranjang) > 0)
+                @foreach($keranjang as $projectId => $item)
+                    <!-- Nama Toko -->
+                    <div class="p-4 bg-white rounded-2xl">
+                        <div class="flex items-center gap-2 mb-4">
+                            <i class="fas fa-store text-ungu"></i>
+                            <span class="font-semibold text-ungu">{{ $item['umkm'] ?? 'UMKM' }}</span>
+                        </div>
+                         <!-- Item Produk -->
+                        <div class="flex flex-col md:grid md:grid-cols-12 gap-4 md:gap-0 md:items-center">
+                            <div class="md:col-span-4 flex gap-4">
+                                <img src="{{ asset('img/umkm1.jpeg') }}" class="w-48 h-20 object-cover rounded-2xl">
+                                <div>
+                                    <p class="line-clamp-2">{{ $item['project_name'] }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Harga Satuan - Mobile -->
+                            <div class="md:hidden flex justify-between items-center">
+                                <span class="text-gray-600">Satu lembar:</span>
+                                <span>Rp{{ number_format($item['price'] ?? 0) }}</span>
+                            </div>
+                            
+                            <!-- Harga Satuan - Desktop -->
+                            <div class="hidden md:block md:col-span-2 text-center">
+                                Rp{{ number_format($item['price'] ?? 0) }}
+                            </div>
+                             <!-- Kuantitas -->
+                            <div class="md:col-span-2 flex justify-between md:justify-center items-center">
+                                <span class="md:hidden text-gray-600">Jumlah Lembar:</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="">{{ number_format($item['quantity']) }}</span>
+                                </div>
+                            </div>
+                             <!-- Total Harga -->
+                             <div class="md:col-span-2 flex justify-between md:justify-center items-center">
+                                 <span class="md:hidden text-gray-600">Total:</span>
+                                 <span class="text-red-500">Rp{{ number_format($item['subtotal']) }}</span>
+                            </div>
+                             <!-- Aksi -->
+                             <div class="md:col-span-2 flex justify-end md:justify-center flex-col space-y-2">
                                 <a href="{{ route('investor.payment.show', ['projectId' => $projectId]) }}" 
-                                    class="bg-ungu hover:bg-purple-700 text-white font-bold py-2 px-4 rounded inline-flex items-center">
+                                    class="self-center w-32 inline-flex justify-center items-center px-4 py-2 bg-ungu border border-transparent rounded-full font-medium text-sm text-white hover:bg-ungu/80 focus:bg-ungu/80 active:bg-ungu/90 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                      <i class="fa-solid fa-credit-card mr-2"></i>
-                                     Bayar
+                                     Proses
                                  </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @else
-            <p class="text-gray-700">Keranjang Anda kosong.</p>
-        @endif
+                                <button onclick="hapusProduk('{{ $projectId }}')" class="self-center w-32 inline-flex justify-center items-center px-4 py-2 bg-white border-2 border-red-500 rounded-full font-medium text-sm text-red-500 hover:bg-red-500 hover:text-white focus:bg-red-500/80 active:bg-red-500/90 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                     <i class="fas fa-trash mr-2"></i>
+                                     <span class="">Hapus</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            @else
+                <div class="p-8 text-center text-gray-500">
+                    <i class="fas fa-shopping-cart text-4xl mb-4"></i>
+                    <p>Keranjang Anda kosong</p>
+                </div>
+            @endif
+        </div>
     </div>
-    
+    <script>
+    function hapusProduk(projectId) {
+        if (confirm('Apakah Anda yakin ingin menghapus produk ini dari keranjang?')) {
+            fetch(`/investor/keranjang/${projectId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Tampilkan pesan sukses
+                alert(data.message);
+                // Reload halaman untuk memperbarui tampilan
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus produk');
+            });
+        }
+    }
+    </script>
 </x-app-layout>

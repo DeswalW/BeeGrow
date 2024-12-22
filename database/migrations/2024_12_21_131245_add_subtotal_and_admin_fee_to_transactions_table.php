@@ -12,10 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->integer('quantity')->after('amount');
-            $table->string('payment_type')->nullable()->after('quantity');
-            $table->string('payment_code')->nullable()->after('payment_type');
-            $table->timestamp('payment_date')->nullable()->after('payment_code');
+            $table->decimal('subtotal', 15, 2)->after('amount');
+            $table->decimal('admin_fee', 15, 2)->after('subtotal');
         });
     }
 
@@ -25,12 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->dropColumn([
-                'quantity',
-                'payment_type',
-                'payment_code',
-                'payment_date'
-            ]);
+            $table->dropColumn('subtotal', 'admin_fee');
         });
     }
 };

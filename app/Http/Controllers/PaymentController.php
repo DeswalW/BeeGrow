@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use Midtrans\Snap;
 use Midtrans\Config;
 use App\Models\Project;
+use Midtrans\Notification;
 use App\Models\Transaction;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use App\Models\Investment;
 
 class PaymentController extends Controller
 {
@@ -22,13 +26,22 @@ class PaymentController extends Controller
 
         $project = Project::findOrFail($projectId);
         
+        // Cek apakah proyek sudah terdanai penuh
+        if ($project->isFullyFunded()) {
+            return redirect()->back()->with('error', 'Proyek ini sudah terdanai penuh.');
+        }
+
         // Cek apakah request datang dari form langsung
         if (request()->has('quantity')) {
             $quantity = request()->quantity;
-            $totalAmount = $quantity * 10000; // Harga per lembar Rp 10.000
+            $subtotal = $quantity * 10000; // Harga per lembar Rp 10.000
+            $adminFee = $subtotal * 0.015; // Biaya admin 1,5%
+            $totalAmount = $subtotal + $adminFee;
             
             $item = [
                 'quantity' => $quantity,
+                'subtotal' => $subtotal,
+                'admin_fee' => $adminFee,
                 'total_amount' => $totalAmount
             ];
         } else {
@@ -41,16 +54,18 @@ class PaymentController extends Controller
             $item = $keranjang[$projectId];
         }
 
-        // Lanjutkan dengan proses pembayaran Midtrans
-        $orderId = 'INV-' . time();
-        
-        // Simpan transaksi ke database
+        // Generate order ID
+        $orderId = Str::uuid();
+
+        // Buat record transaksi
         $transaction = Transaction::create([
             'order_id' => $orderId,
-            'user_id' => Auth::id(),
             'project_id' => $project->id,
-            'quantity' => $item['quantity'],
+            'user_id' => Auth::id(),
+            'quantity' => request()->has('quantity') ? request()->quantity : $item['quantity'],
             'amount' => $item['total_amount'],
+            'subtotal' => $item['subtotal'],
+            'admin_fee' => $item['admin_fee'],
             'status' => 'pending'
         ]);
 
@@ -67,9 +82,15 @@ class PaymentController extends Controller
             'item_details' => [
                 [
                     'id' => $project->id,
-                    'price' => $item['total_amount'],
+                    'price' => $item['subtotal'],
                     'quantity' => 1,
                     'name' => $project->title,
+                ],
+                [
+                    'id' => 'admin-fee',
+                    'price' => $item['admin_fee'],
+                    'quantity' => 1,
+                    'name' => 'Biaya Admin (1,5%)',
                 ]
             ],
             'callbacks' => [
@@ -78,6 +99,9 @@ class PaymentController extends Controller
                 'pending' => route('investor.payment.pending')
             ]
         ];
+
+        Config::$appendNotifUrl = route('payment.notification');
+        Config::$overrideNotifUrl = true;
 
         try {
             $snapToken = Snap::getSnapToken($params);
@@ -94,28 +118,46 @@ class PaymentController extends Controller
 
     public function  success(Request $request)
     {
-        // Ambil order_id dari query parameter
         $orderId = $request->query('order_id');
-        
-        // Cari transaksi berdasarkan order_id
         $transaction = Transaction::where('order_id', $orderId)->first();
         
         if (!$transaction) {
             return redirect()->route('dashboard')->with('error', 'Transaksi tidak ditemukan');
         }
+
         // Update status transaksi jika belum success
         if ($transaction->status !== 'success') {
+            // 1. Update status transaksi
             $transaction->update(['status' => 'success']);
             
-            // Update dana terkumpul proyek
+            // 2. Update dana terkumpul di funding_details
             $project = Project::find($transaction->project_id);
             if ($project && $project->fundingDetails) {
-                $project->fundingDetails->increment('dana_terkumpul', $transaction->amount);
+                $totals = Transaction::where('project_id', $project->id)
+                                   ->where('status', 'success')
+                                   ->selectRaw('SUM(subtotal) as total_subtotal, SUM(admin_fee) as total_admin_fee')
+                                   ->first();
+                
+                $project->fundingDetails->update([
+                    'dana_terkumpul' => $totals->total_subtotal ?? 0,
+                    'admin_fee_collected' => $totals->total_admin_fee ?? 0
+                ]);
             }
+            
+            // 3. Catat riwayat investasi
+            Investment::create([
+                'user_id' => $transaction->user_id,
+                'project_id' => $transaction->project_id,
+                'amount' => $transaction->subtotal,
+                'quantity' => $transaction->quantity,
+                'projected_return' => $transaction->subtotal * 0.2, // Asumsi return 20%
+                'status' => 'active'
+            ]);
             
             // Hapus item dari keranjang
             session()->forget("keranjang.{$transaction->project_id}");
         }
+
         return view('projects.payments.success', [
             'transaction' => $transaction,
             'project' => $transaction->project
@@ -159,47 +201,115 @@ class PaymentController extends Controller
 
     public function notification(Request $request)
     {
-        $payload = $request->all();
-    
-        $orderId = $payload['order_id'];
-        $transactionStatus = $payload['transaction_status'];
-        $fraudStatus = $payload['fraud_status'] ?? null;
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
 
-        $transaction = Transaction::where('order_id', $orderId)->first();
-        
-            $signatureKey = hash('sha512', 
-            $request->order_id . 
-            $request->status_code . 
-            $request->gross_amount . 
-            config('midtrans.server_key')
-        );
-        if ($signatureKey !== $request->signature_key) {
-            return response()->json(['message' => 'Invalid signature'], 403);
-        }
+        try {
+            Log::info('Midtrans Notification Received:', $request->all());
+            
+            $notification = new Notification();
+            
+            $orderId = $notification->order_id;
+            $transactionStatus = $notification->transaction_status;
+            $fraudStatus = $notification->fraud_status;
 
-        if (!$transaction) {
-            return response()->json(['status' => 'error', 'message' => 'Transaction not found'], 404);
+            Log::info('Processing Transaction:', [
+                'order_id' => $orderId,
+                'status' => $transactionStatus,
+                'fraud_status' => $fraudStatus
+            ]);
+
+            $transaction = Transaction::where('order_id', $orderId)->first();
+
+            if (!$transaction) {
+                Log::error('Transaction Not Found:', ['order_id' => $orderId]);
+                return response()->json(['status' => 'error', 'message' => 'Transaction not found'], 404);
+            }
+
+            if ($transactionStatus == 'capture') {
+                if ($fraudStatus == 'challenge') {
+                    $transaction->status = 'challenge';
+                } else if ($fraudStatus == 'accept') {
+                    $transaction->status = 'success';
+                    $this->updateProjectFunding($transaction);
+                }
+            } else if ($transactionStatus == 'settlement') {
+                $transaction->status = 'success';
+                $this->updateProjectFunding($transaction);
+            } else if ($transactionStatus == 'cancel' || $transactionStatus == 'deny' || $transactionStatus == 'expire') {
+                $transaction->status = 'failed';
+            } else if ($transactionStatus == 'pending') {
+                $transaction->status = 'pending';
+            }
+
+            Log::info('Transaction Updated:', [
+                'order_id' => $orderId,
+                'new_status' => $transaction->status
+            ]);
+            
+            return response()->json(['status' => 'success']);
+        } catch (\Exception $e) {
+            Log::error('Notification Error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
         }
-            if ($transactionStatus == 'capture' || $transactionStatus == 'settlement') {
-            $transaction->status = 'success';
-            $this->updateProjectFunding($transaction);
-        } else if ($transactionStatus == 'pending') {
-            $transaction->status = 'pending';
-        } else if (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
-            $transaction->status = 'failed';
-        }
-            $transaction->save();
-        
-        return response()->json(['status' => 'success']);
-        }
+    }
 
     private function updateProjectFunding($transaction)
     {
         $project = Project::find($transaction->project_id);
-        if ($project) {
-            $project->fundingDetails->increment('dana_terkumpul', $transaction->amount);
-            // Hapus item dari keranjang jika pembayaran sukses
-            session()->forget("keranjang.{$transaction->project_id}");
+        if ($project && $project->fundingDetails) {
+            // Hitung total subtotal dan admin_fee dari semua transaksi sukses untuk project ini
+            $totals = Transaction::where('project_id', $project->id)
+                               ->where('status', 'success')
+                               ->selectRaw('SUM(subtotal) as total_subtotal, SUM(admin_fee) as total_admin_fee')
+                               ->first();
+            
+            // Update dana_terkumpul dengan total subtotal dari semua transaksi
+            $project->fundingDetails->update([
+                'dana_terkumpul' => $totals->total_subtotal ?? 0,
+                'admin_fee_collected' => $totals->total_admin_fee ?? 0
+            ]);
         }
+        
+        // Hapus item dari keranjang
+        session()->forget("keranjang.{$transaction->project_id}");
+    }
+
+    public function processPayment(Request $request, $projectId)
+    {
+        $project = Project::findOrFail($projectId);
+        $user = Auth::user();
+        
+        // Ambil data dari keranjang atau request langsung
+        $item = session()->get('keranjang')[$projectId] ?? [
+            'quantity' => $request->quantity,
+            'subtotal' => $request->quantity * 10000,
+            'admin_fee' => ($request->quantity * 10000) * 0.015,
+        ];
+
+        // Simpan data investasi
+        Investment::create([
+            'user_id' => $user->id,
+            'project_id' => $projectId,
+            'amount' => $item['subtotal'],
+            'quantity' => $item['quantity'],
+            'projected_return' => $item['subtotal'] * 0.2, // Misalnya return 20%
+            'status' => 'active'
+        ]);
+
+        // Hapus item dari keranjang jika ada
+        if (isset(session()->get('keranjang')[$projectId])) {
+            $keranjang = session()->get('keranjang');
+            unset($keranjang[$projectId]);
+            session()->put('keranjang', $keranjang);
+        }
+
+        return redirect()->route('investor.portofolio')->with('success', 'Investasi berhasil!');
     }
 }

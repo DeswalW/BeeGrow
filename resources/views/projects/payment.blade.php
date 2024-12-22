@@ -18,6 +18,10 @@
                         <p class="font-semibold">{{ $item['quantity'] }}</p>
                     </div>
                     <div>
+                        <p class="text-gray-600">Biaya Admin (1,5%):</p>
+                        <p class="font-semibold">Rp {{ number_format($item['admin_fee']) }}</p>
+                    </div>
+                    <div>
                         <p class="text-gray-600">Total Pembayaran:</p>
                         <p class="font-semibold">Rp {{ number_format($item['total_amount']) }}</p>
                     </div>
@@ -30,32 +34,32 @@
         </div>
     </div>
      <!-- Note: Ganti ke app.midtrans.com untuk Production -->
-    {{-- <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script> --}}
-    <script src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script>
+    {{-- <script src="https://app.midtrans.com/snap/snap.js" data-client-key="{{ $clientKey }}"></script> --}}
     
     <script type="text/javascript">
         var payButton = document.getElementById('pay-button');
         payButton.addEventListener('click', function () {
             window.snap.pay('{{ $snapToken }}', {
                 onSuccess: function(result) {
-                    console.log('success');
-                    console.log(result);
-                    window.location.href = "{{ route('investor.payment.success') }}?d=" + result.order_id;
-            },
-            onPending: function(result) {
-                console.log('pending');
-                console.log(result);
-                window.location.href = "{{ route('investor.payment.pending') }}?order_id=" + result.order_id;
-            },
-            onError: function(result) {
-                console.log('error');
-                console.log(result);
-                window.location.href = "{{ route('investor.payment.error') }}?order_id=" + result.order_id;
-            },
-            onClose: function() {
-                console.log('customer closed the popup without finishing the payment');
-            }
-        });
-    });
+                   console.log('success');
+                   console.log(result);
+                   window.location.href = "{{ route('investor.payment.success') }}?order_id=" + result.order_id;
+               },
+               onPending: function(result) {
+                   console.log('pending');
+                   console.log(result);
+                   window.location.href = "{{ route('investor.payment.pending') }}?order_id=" + result.order_id;
+               },
+               onError: function(result) {
+                   console.log('error');
+                   console.log(result);
+                   window.location.href = "{{ route('investor.payment.error') }}?order_id=" + result.order_id;
+               },
+               onClose: function() {
+                   console.log('customer closed the popup without finishing the payment');
+               }
+           });
+       });
     </script>
 </x-app-layout>

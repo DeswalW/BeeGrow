@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\KeranjangController;
 
 Route::get('/', [HomeController::class, 'welcome'])->name('home');
 
@@ -29,12 +30,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/portofolio', [InvestorController::class, 'portofolio'])->name('portofolio');
         Route::get('/keranjang', [InvestorController::class, 'keranjang'])->name('keranjang');
         Route::post('/keranjang/add', [InvestorController::class, 'addToKeranjang'])->name('keranjang.add');
-        Route::get('/payment/{projectId}', [PaymentController::class, 'showPaymentPage'])->name('payment.show');
-        // Route::post('/payment/process', [PaymentController::class, 'processPayment'])->name('payment.process');
         Route::get('/payment/success', [PaymentController::class, 'success'])->name('payment.success');
         Route::get('/payment/pending', [PaymentController::class, 'pending'])->name('payment.pending');
         Route::get('/payment/error', [PaymentController::class, 'error'])->name('payment.error');
-        Route::post('/payment/notification', [PaymentController::class, 'notification'])->name('payment.notification');
+        Route::get('/payment/{projectId}', [PaymentController::class, 'showPaymentPage'])->name('payment.show');
+        Route::delete('/keranjang/{projectId}', [KeranjangController::class, 'destroy'])->name('investor.keranjang.destroy');
     });
     
     Route::middleware('role:umkm')->prefix('umkm')->name('umkm.')->group(function () {
@@ -42,6 +42,6 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-Route::post('/payment/notification', [PaymentController::class, 'notification']);
+Route::post('/payment/notification', [PaymentController::class, 'notification'])->name('payment.notification');
 
 require __DIR__.'/auth.php';

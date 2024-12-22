@@ -15,6 +15,8 @@ class Transaction extends Model
         'project_id',
         'quantity',
         'amount',
+        'subtotal',
+        'admin_fee',
         'status',
         'payment_type',
         'payment_code',
@@ -33,5 +35,10 @@ class Transaction extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function uniqueIds(): array
+    {
+        return ['order_id'];
     }
 }
