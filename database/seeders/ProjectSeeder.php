@@ -18,8 +18,8 @@ class ProjectSeeder extends Seeder
         // Insert project data
         $projectId = DB::table('projects')->insertGetId([
             'umkm_id' => 1,
-            'title' => 'Proyek UMKM Contoh 2',
-            'description' => 'Deskripsi proyek UMKM Contoh 2',
+            'title' => 'Proyek UMKM Kamal',
+            'description' => 'Deskripsi proyek UMKM Kamal',
             'photo' => 'https://sl.bing.net/bwDTi0TwBsy',
             'status' => 'Sedang Berlangsung',
             'deadline' => Carbon::now()->addDays(30),
@@ -30,7 +30,7 @@ class ProjectSeeder extends Seeder
         // Insert funding details
         DB::table('funding_details')->insert([
             'project_id' => $projectId,
-            'target_pendanaan' => 50000000,
+            'target_pendanaan' => 25000000,
             'dana_terkumpul' => 0,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
