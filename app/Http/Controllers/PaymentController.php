@@ -35,7 +35,7 @@ class PaymentController extends Controller
         if (request()->has('quantity')) {
             $quantity = request()->quantity;
             $subtotal = $quantity * 10000; // Harga per lembar Rp 10.000
-            $adminFee = $subtotal * 0.015; // Biaya admin 1,5%
+            $adminFee = $subtotal * 0.025; // Biaya admin 2,5%
             $totalAmount = $subtotal + $adminFee;
             
             $item = [
@@ -90,7 +90,7 @@ class PaymentController extends Controller
                     'id' => 'admin-fee',
                     'price' => $item['admin_fee'],
                     'quantity' => 1,
-                    'name' => 'Biaya Admin (1,5%)',
+                    'name' => 'Biaya Admin (2,5%)',
                 ]
             ],
             'callbacks' => [
@@ -290,7 +290,7 @@ class PaymentController extends Controller
         $item = session()->get('keranjang')[$projectId] ?? [
             'quantity' => $request->quantity,
             'subtotal' => $request->quantity * 10000,
-            'admin_fee' => ($request->quantity * 10000) * 0.015,
+            'admin_fee' => ($request->quantity * 10000) * 0.025,
         ];
 
         // Simpan data investasi

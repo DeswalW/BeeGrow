@@ -2,28 +2,37 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
-
 class RoleAndPermissionSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    public function run()
     {
-        $admin = Role::create(['name' => 'admin']);
-        $umkm = Role::create(['name' => 'umkm']);
-        $investor = Role::create(['name' => 'investor']);
+        // Bersihkan cache
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        Permission::create(['name' => 'manage projects']);
-        Permission::create(['name' => 'invest in projects']);
+        // Buat role jika belum ada
+        $roles = ['admin', 'investor', 'umkm'];
+        foreach ($roles as $role) {
+            Role::firstOrCreate(['name' => $role]);
+        }
 
-        $admin->givePermissionTo(['manage projects', 'invest in projects']);
-        $umkm->givePermissionTo('manage projects');
-        $investor->givePermissionTo('invest in projects');
+        // Buat permissions jika diperlukan
+        $permissions = [
+            'manage users',
+            'manage projects',
+            'view reports'
+            // tambahkan permission lain yang diperlukan
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // Assign permissions ke role
+        $adminRole = Role::findByName('admin');
+        $adminRole->givePermissionTo(Permission::all());
     }
 }

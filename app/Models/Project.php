@@ -72,5 +72,9 @@ class Project extends Model
         return $this->fundingDetails->dana_terkumpul >= $this->fundingDetails->target_pendanaan;
     }
 
+    public function images()
+    {
+        return $this->hasMany(ProjectImage::class);
+    }
 
 }

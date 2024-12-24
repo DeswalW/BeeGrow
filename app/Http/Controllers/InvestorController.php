@@ -36,7 +36,7 @@ class InvestorController extends Controller
         
         $quantity = $request->quantity;
         $subtotal = $quantity * 10000;
-        $adminFee = $subtotal * 0.015;
+        $adminFee = $subtotal * 0.025;
         $totalAmount = $subtotal + $adminFee;
     
         $keranjang = session()->get('keranjang', []);
@@ -62,7 +62,7 @@ class InvestorController extends Controller
             $existingItem = $keranjang[$project->id];
             $existingItem['quantity'] += $quantity;
             $existingItem['subtotal'] = $existingItem['quantity'] * 10000;
-            $existingItem['admin_fee'] = $existingItem['subtotal'] * 0.015;
+            $existingItem['admin_fee'] = $existingItem['subtotal'] * 0.025;
             $existingItem['total_amount'] = $existingItem['subtotal'] + $existingItem['admin_fee'];
             $keranjang[$project->id] = $existingItem;
         }

@@ -33,4 +33,15 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.index');
     }
+
+    public function show($project_id)
+    {
+        $project = Project::with(['umkm', 'fundingDetails'])->findOrFail($project_id);
+        
+        if (!$project->umkm) {
+            return redirect()->back()->with('error', 'Data UMKM tidak ditemukan');
+        }
+        
+        return view('projects.show', compact('project'));
+    }
 }

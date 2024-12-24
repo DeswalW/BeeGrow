@@ -15,6 +15,7 @@ class Umkm extends Model
         'description',
         'contact',
         'address',
+        'category_id'
     ];
 
     public function user()
@@ -27,8 +28,8 @@ class Umkm extends Model
         return $this->hasMany(Project::class);
     }
 
-    public function categories()
-   {
-       return $this->belongsToMany(Category::class, 'category_umkm');
-   }
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

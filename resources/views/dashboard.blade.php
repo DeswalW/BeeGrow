@@ -5,7 +5,7 @@
     <!-- Sidebar -->
     @include('components.filter-side')
 
-    <main class="md:ml-80 h-auto pt-24 px-6 md:pr-20">
+    <main class="md:ml-80 h-auto pt-24 px-4 md:pr-20">
       <x-projects-umkm :provinces="$provinces" :projects="$projects" />
     </main>
   </div>

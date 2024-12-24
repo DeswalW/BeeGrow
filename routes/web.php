@@ -39,6 +39,10 @@ Route::middleware('auth')->group(function () {
     
     Route::middleware('role:umkm')->prefix('umkm')->name('umkm.')->group(function () {
         Route::get('/dashboard', [UmkmController::class, 'index'])->name('dashboard');
+        Route::get('/profile/create', [UmkmController::class, 'createProfile'])->name('profile.create');
+        Route::post('/profile', [UmkmController::class, 'storeProfile'])->name('profile.store');
+        Route::get('/projects/create', [UmkmController::class, 'create'])->name('projects.create');
+        Route::post('/projects', [UmkmController::class, 'store'])->name('projects.store');
     });
 });
 

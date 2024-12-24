@@ -22,8 +22,15 @@ export default {
                 ungu: '#624BD7',
                 kuning: '#FFC603',
             },
+
+            aspectRatio: {
+                'w-16': 16,
+                'h-9': 9,
+            }
         },
     },
 
-    plugins: [forms, require('flowbite/plugin')],
+    plugins: [
+        forms, require('flowbite/plugin'), require('@tailwindcss/aspect-ratio'), require('@tailwindcss/line-clamp'),
+    ],
 };
